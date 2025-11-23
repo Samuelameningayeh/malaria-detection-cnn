@@ -1,0 +1,11 @@
+# Ignore Data
+cell_images/
+data/
+
+# Ignore Python Cache and Notebook checkpoints
+__pycache__/
+.ipynb_checkpoints/
+
+# (Optional) Ignore the model if it's > 100MB. 
+# Your custom CNN is likely small (~50MB), so you can keep it.
+# *.pth
