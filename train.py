@@ -1,4 +1,5 @@
 import torch
+from tqdm.auto import tqdm # Automatically chooses notebook-friendly progress bars
 
 def train_step(model, loader, criterion, optimizer, device):
     """
@@ -9,7 +10,10 @@ def train_step(model, loader, criterion, optimizer, device):
     correct = 0
     total = 0
     
-    for images, labels in loader:
+    # leave=False means the bar disappears after the epoch finishes (keeps notebook clean)
+    loop = tqdm(loader, desc="Training", leave=False)
+    
+    for images, labels in loop:
         images, labels = images.to(device), labels.to(device)
         
         optimizer.zero_grad()
@@ -28,6 +32,9 @@ def train_step(model, loader, criterion, optimizer, device):
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
         
+        # UPDATE THE BAR LIVE
+        loop.set_postfix(loss=loss.item())
+        
     epoch_loss = running_loss / len(loader.dataset)
-    epoch_acc = 100 * correct / total
+    epoch_acc = correct / total
     return epoch_loss, epoch_acc

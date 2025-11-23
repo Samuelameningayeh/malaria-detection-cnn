@@ -1,4 +1,5 @@
 import torch
+from tqdm.auto import tqdm
 
 def evaluate_step(model, loader, criterion, device):
     """
@@ -9,8 +10,11 @@ def evaluate_step(model, loader, criterion, device):
     correct = 0
     total = 0
     
+    # WRAP THE LOADER
+    loop = tqdm(loader, desc="Validating", leave=False)
+    
     with torch.no_grad(): # No gradients needed
-        for images, labels in loader:
+        for images, labels in loop:
             images, labels = images.to(device), labels.to(device)
             
             outputs = model(images)
