@@ -26,5 +26,5 @@ def evaluate_step(model, loader, criterion, device):
             correct += (predicted == labels).sum().item()
             
     epoch_loss = running_loss / len(loader.dataset)
-    epoch_acc = 100 * correct / total
+    epoch_acc = correct / total
     return epoch_loss, epoch_acc

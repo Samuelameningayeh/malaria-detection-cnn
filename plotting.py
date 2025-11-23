@@ -1,89 +1,97 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torchvision 
 
-def plot_sample_images(loader, class_names, count=5):
+def plot_sample_images(dataloader, class_names, num_images=8):
     """
-    EDA: Plots random images from a batch
+    Plots a sample of images from a dataloader.
     """
-    images, labels = next(iter(loader))
-    plt.figure(figsize=(15, 5))
-    
-    for i in range(count):
-        plt.subplot(1, count, i + 1)
-        # Un-normalize for display: img = (img * std) + mean
-        img = images[i].numpy().transpose((1, 2, 0))
-        img = img * 0.5 + 0.5
-        
-        plt.imshow(img)
-        plt.title(class_names[labels[i]])
-        plt.axis('off')
+    images, labels = next(iter(dataloader))
+    fig = plt.figure(figsize=(num_images * 2, 4))
+    for i in range(min(num_images, len(images))): # Ensure we don't try to plot more than available
+        ax = fig.add_subplot(2, num_images // 2, i + 1)
+        img = images[i].cpu().numpy().transpose((1, 2, 0))
+
+        # Denormalize if necessary (assuming standard ImageNet normalization)
+        mean = np.array([0.485, 0.456, 0.406])
+        std = np.array([0.229, 0.224, 0.225])
+        img = std * img + mean
+        img = np.clip(img, 0, 1)
+
+        ax.imshow(img)
+        ax.set_title(class_names[labels[i]])
+        ax.axis("off")
+    plt.tight_layout()
     plt.show()
 
 def plot_results(results, save=False):
     """
-    Plots Loss and Accuracy curves
-    results: dict containing lists of losses and accuracies
+    Plots training and validation loss and accuracy curves.
     """
     epochs = range(1, len(results['train_loss']) + 1)
-    
+
     plt.figure(figsize=(12, 5))
-    
-    # Loss Plot
+
+    # Plot Loss
     plt.subplot(1, 2, 1)
     plt.plot(epochs, results['train_loss'], label='Train Loss')
-    plt.plot(epochs, results['val_loss'], label='Val Loss')
+    plt.plot(epochs, results['val_loss'], label='Validation Loss')
     plt.title('Loss over Epochs')
-    plt.xlabel('Epochs')
+    plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
-    
-    # Accuracy Plot
+    plt.grid(True)
+
+    # Plot Accuracy
     plt.subplot(1, 2, 2)
-    plt.plot(epochs, results['train_acc'], label='Train Acc')
-    plt.plot(epochs, results['val_acc'], label='Val Acc')
+    plt.plot(epochs, results['train_acc'], label='Train Accuracy')
+    plt.plot(epochs, results['val_acc'], label='Validation Accuracy')
     plt.title('Accuracy over Epochs')
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy (%)')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
     plt.legend()
-    
+    plt.grid(True)
+
     plt.tight_layout()
     if save:
-        plt.savefig('results.png')
+        plt.savefig("train_results.png")
     plt.show()
 
-def plot_predictions(model, test_loader, class_names, device='cpu', columns=5, rows=2, save=False):
+def plot_predictions(model, test_loader, class_names, device, columns=4, rows=2, save=False):
     """
-    Plots predictions for a batch of images.
-    model: The trained PyTorch model
-    test_loader: DataLoader for test data
-    class_names: List of class names
-    device: 'cpu' or 'cuda'
+    Plots a grid of sample images with their true and predicted labels.
     """
     model = model.to(device)
     model.eval() # Important: Turns off Dropout for consistent predictions
-    for i in range(count):
-        ax = fig.add_subplot(rows, columns, i + 1)
-        
-        # A. Un-normalize the image so it looks like a photo
-        # (Input was normalized with mean=0.5, std=0.5)
+    fig = plt.figure(figsize=(columns * 3, rows * 4)) # Adjust figure size
+
+    images, labels = next(iter(test_loader)) # Get one batch for predictions
+    images, labels = images.to(device), labels.to(device)
+
+    with torch.no_grad():
+        outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+
+    # Plot up to columns*rows images from the batch
+    for i in range(min(len(images), columns * rows)):
+        ax = fig.add_subplot(rows, columns, i + 1) # Use i as the subplot index
+
+        # Denormalize image (assuming standard ImageNet normalization as used in dataloading.py usually)
         img = images[i].cpu().numpy().transpose((1, 2, 0))
-        img = img * 0.5 + 0.5     # Reverse the math
-        img = np.clip(img, 0, 1)  # Ensure colors stay valid
-        
-        # B. Determine Label Names
-        # Use .item() to convert 0-d tensor to scalar
-        actual_label = class_names[labels[i].item()]
-        pred_label = class_names[preds[i].item()]
-        
-        # C. Color Code the Title (Green = Correct, Red = Wrong)
-        color = 'green' if actual_label == pred_label else 'red'
-        
-        plt.imshow(img)
-        ax.set_title(f"Actual: {actual_label}\nPred: {pred_label}", color=color, fontweight='bold')
-        plt.axis('off')
+        mean = np.array([0.485, 0.456, 0.406]) # Standard ImageNet mean
+        std = np.array([0.229, 0.224, 0.225])   # Standard ImageNet std
+        img = std * img + mean
+        img = np.clip(img, 0, 1) # Clip to [0, 1] range for imshow
+
+        ax.imshow(img)
+        true_label = class_names[labels[i]]
+        pred_label = class_names[predicted[i]]
+        title_color = "green" if true_label == pred_label else "red"
+        ax.set_title(f"True: {true_label}\nPred: {pred_label}", color=title_color, fontsize=10)
+        ax.axis("off")
 
     plt.tight_layout()
     if save:
-        plt.savefig('predictions.png')
+        plt.savefig("predictions.png")
     plt.show()

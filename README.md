@@ -15,7 +15,9 @@ Unlike standard notebooks, this project is built as a Python package:
 * **Architecture:** 3-Layer Convolutional Neural Network (CNN)
 * **Dataset:** NIH Malaria Cell Images
 
-![Loss and Accuracy Plot](results.png)
+![Loss and Accuracy Plot](train_results.png)
+
+![Predictions](predictions.png)
 
 ## 🚀 Usage
 ```python
