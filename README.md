@@ -11,8 +11,8 @@ Unlike standard notebooks, this project is built as a Python package:
 * `Malaria_Analysis.ipynb`: The main laboratory notebook for EDA and experiments.
 
 ## 📊 Results
-* **Accuracy:** ~95%
-* **Architecture:** 3-Layer Convolutional Neural Network (CNN)
+* **Accuracy:** ~97%
+* **Architecture:** 4-Layer Convolutional Neural Network (CNN)
 * **Dataset:** NIH Malaria Cell Images
 
 ![Loss and Accuracy Plot](train_results.png)
